@@ -39,15 +39,15 @@ jobs:
           name: Docker publish server
           command: |
             TAG=0.1.$CIRCLE_BUILD_NUM
-            docker build -t wszelig/ASK-server:$TAG .
-            docker push wszelig/ASK-server:$TAG
+            docker build -t wszelig/ASK-2-server:$TAG .
+            docker push wszelig/ASK-2-server:$TAG
           working_directory: ./server
       - run:
           name: Docker publish client
           command: |
             TAG=0.1.$CIRCLE_BUILD_NUM
-            docker build -t wszelig/ASK-client:$TAG .
-            docker push wszelig/ASK-client:$TAG
+            docker build -t wszelig/ASK-2-client:$TAG .
+            docker push wszelig/ASK-2-client:$TAG
           working_directory: ./client
 workflows:
     build-and-test:
