@@ -2,21 +2,30 @@ version: 2.1
 orbs:
   node: circleci/node@1.1.6
 jobs:
-  build-and-test:
+  server-build-and-test:
     executor:
       name: node/default
     steps:
       - checkout
+      - node/install-packages:
+          app-dir: ./server
       - run:
           command: npm install
           working_directory: ./server
-      - run:
-          command: npm install
-          working_directory: ./client
       - run: 
           name: Running server tests
           command: npm test
           working_directory: ./server
+  client-build-and-test:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          app-dir: ./client
+      - run:
+          command: npm install
+          working_directory: ./client
       - run:
           name: Running client tests
           command: npm test
@@ -25,15 +34,35 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: echo "$DOCKER_PASS | docker login -u "$DOCKER_USER" --password-stdin
+      - run: echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
       - run:
           name: Docker publish server
           command: |
-            TAG=0.1$CIRCLE_BUILD_NUM
+            TAG=0.1.$CIRCLE_BUILD_NUM
             docker build -t wszelig/ASK-server:$TAG .
             docker push wszelig/ASK-server:$TAG
-          working_directory: ./serer
+          working_directory: ./server
+      - run:
+          name: Docker publish client
+          command: |
+            TAG=0.1.$CIRCLE_BUILD_NUM
+            docker build -t wszelig/ASK-client:$TAG .
+            docker push wszelig/ASK-client:$TAG
+          working_directory: ./client
 workflows:
     build-and-test:
       jobs:
-        - build-and-test
+        - client-build-and-test:
+          filters:
+            branches:
+              only:
+                - master
+        - server-build-and-test:
+          filters:
+            branches:
+              only:
+                - master
+        - publish-docker:
+            requires:
+              - client-build-and-test
+              - server-build-and-test
